@@ -46,6 +46,9 @@ def clean_transform_data(df: pd.DataFrame) -> pd.DataFrame:
   categorical_columns = df.select_dtypes(include=['object']).columns
   for col in categorical_columns:
     df[col] = df[col].astype('category')
+    
+  # Add BMI column
+  df['BMI'] = df['Weight'] / (df['Height'] ** 2)
         
   return df
 

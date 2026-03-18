@@ -4,6 +4,7 @@ import pandas as pd
 #import plotly.express as px
 from data_load_clean_transform import load_clean_dataset
 from config import Kaggle_repo, Kaggle_file, DATA_PROCESSED_PATH
+from plot import *
 #from src.visualization import plot_distribution, plot_time_series
 
 # --- Configuration de la page ---
@@ -15,7 +16,7 @@ st.set_page_config(
 
 # --- Titre et description ---
 st.title("📊 Dashboard d'Analyse des données d'obésité")
-st.markdown("<h2 style='color: #1E88E5;'>Flavie Kolb</h2>", unsafe_allow_html=True)
+st.markdown("<h2>Flavie Kolb</h2>", unsafe_allow_html=True)
 
 # Sidebar pour la navigation
 with st.sidebar:
@@ -36,12 +37,8 @@ data = load_data()
 # Contenu principal en fonction de la section sélectionnée
 if section == "1. Présentation des données":
     st.header("1. Présentation des données")
-    st.write("Apperçu du dataset :")
-    
-    st.dataframe(data)
     
     st.write("Description des variables :")
-  
     st.markdown("""
     | **Nom / Name**                  | **Type**   | **Description (Français)**                                                                                     | **Description (English)**                                                                                     | **Notes**                                                                 |
     |---------------------------------|------------|---------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
@@ -49,6 +46,7 @@ if section == "1. Présentation des données":
     | **Age**                         | int        | Âge de la personne en années.                                                                               | Age of the person in years.                                                                                   | Valeurs plausibles : 14–61 ans / Plausible values: 14–61 years.              |
     | **Height**                      | float      | Taille de la personne en mètres.                                                                            | Height of the person in meters.                                                                              | Arrondi à 2 décimales / Rounded to 2 decimal places.                        |
     | **Weight**                      | float      | Poids de la personne en kilogrammes.                                                                        | Weight of the person in kilograms.                                                                           | Arrondi à 1 décimale / Rounded to 1 decimal place.                         |
+    | **BMI**                         | float      | Indice de masse corporelle calculé (Poids / Taille²).                                                       | Body Mass Index calculated (Weight / Height²).                                                              | Ajouté lors du nettoyage des données / Added during data cleaning.          |
     | **family_history_with_overweight** | string  | Antécédents familiaux d'obésité ou de surpoids (`yes` ou `no`).                                              | Family history of obesity or overweight (`yes` or `no`).                                                      |                                                                           |
     | **FAVC**                        | string     | Consommation fréquente d'aliments riches en calories (`yes` ou `no`).                                        | Frequent consumption of high-calorie food (`yes` or `no`).                                                     |                                                                           |
     | **FCVC**                        | float      | Fréquence de consommation de légumes (échelle de 1 à 3).                                                    | Frequency of vegetable consumption (scale from 1 to 3).                                                       | 1 = Rarement, 2 = Parfois, 3 = Toujours / 1 = Rarely, 2 = Sometimes, 3 = Always. |
@@ -63,32 +61,49 @@ if section == "1. Présentation des données":
     | **MTRANS**                      | string     | Moyen de transport principal (`Automobile`, `Bike`, `Motorbike`, `Public Transportation`, `Walking`).       | Main mode of transportation (`Automobile`, `Bike`, `Motorbike`, `Public Transportation`, `Walking`).         |                                                                           |
     | **NObeyesdad**                  | string     | Niveau d'obésité (`Insufficient Weight`, `Normal Weight`, `Overweight Level I`, `Overweight Level II`, `Obesity Type I`, `Obesity Type II`, `Obesity Type III`). | Obesity level (`Insufficient Weight`, `Normal Weight`, `Overweight Level I`, `Overweight Level II`, `Obesity Type I`, `Obesity Type II`, `Obesity Type III`). | Catégorie cible pour l'analyse / Target category for analysis.                     |
     """)
+    
+    st.write("Apperçu du dataset :")
+    st.dataframe(data)
+
 
 elif section == "2. Analyses des données":
     st.header("2. Analyses des données")
-    st.write("Contenu de la section 2...")
+    st.write("Analyses et visualisations des données.")
     # Ajoute ici ton code pour la section 2
     # Création des onglets
-    tab1, tab2 = st.tabs(["Analyse univariée ", "Analyse Mutlivariée"])
+    tab1, tab2, tab3 = st.tabs(["Analyse univariée ", "Analyse Mutlivariée", "Corrélations"])
     
-        # Contenu de l'onglet 1
+    # Contenu de l'onglet 1
     with tab1:
-        st.header("Analyse des Données")
-        st.write("Voici un exemple de tableau de données :")
+        st.header("Analyse univariée des données")
 
-        st.subheader("Graphique de la colonne 1")
-        #fig = px.line(data, x=data.index, y='colonne1', title='Évolution de la colonne 1')
+        st.subheader("Graphique de la colonne choisie")
+        colonne = st.selectbox("", data.columns)
+        fig = plot_distribution(data, colonne)
         st.plotly_chart(fig, use_container_width=True)
+        
+                
+        st.write("Voici un exemple de tableau de données :")
+        st.write(data[['Age','Height','Weight','BMI']].describe())
     
     # Contenu de l'onglet 2
     with tab2:
-        st.header("Visualisations")
+        st.header("Visualisations multivariées des données")
         st.write("Voici un graphique interactif :")
-        #fig2 = px.bar(data, x=data.index, y='colonne2', title='Valeurs de la colonne 2')
+        x_colonne = st.selectbox("Colonne X :", data.columns, index = 2)
+        y_colonne = st.selectbox("Colonne Y :", data.columns, index= 3)
+        fig2 = plot_x_y(data, x_colonne, y_colonne)
         st.plotly_chart(fig2, use_container_width=True)
 
+    # Contenu de l'onglet 3
+    with tab3:
+        st.header("Corrélations entre les variables")
+        st.write("Etudes des corrélations entre les différentes variables numériques du dataset.")
+        fig3 = plot_correlation_matrix(data)
+        st.plotly_chart(fig3, use_container_width=True)
+    
 elif section == "3. Prédictions":
     st.header("3. Prédictions")
-    st.write("Contenu de la section 3...")
+    st.write("En cours de développement...")
     # Ajoute ici ton code pour la section 3
 
